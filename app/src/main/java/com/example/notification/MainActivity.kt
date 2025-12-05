@@ -3,8 +3,6 @@ package com.example.notification
 import android.Manifest
 import android.app.AlarmManager
 import android.app.AlertDialog
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
@@ -19,7 +17,6 @@ import android.widget.Button
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.snackbar.Snackbar
@@ -57,8 +54,11 @@ class MainActivity : AppCompatActivity() {
                     runOnUiThread { statusTextView.text = message }
                 }
                 if (!photoUrls.isNullOrEmpty()) {
-                    // Fire a notification instead of starting the activity directly
-                    sendManualNotification(this@MainActivity, photoUrls)
+                    // Start StoryActivity directly instead of sending a notification
+                    val storyIntent = Intent(this@MainActivity, StoryActivity::class.java).apply {
+                        putStringArrayListExtra("IMAGE_URLS", ArrayList(photoUrls))
+                    }
+                    startActivity(storyIntent)
                 }
             }
         }
@@ -119,28 +119,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-
-    private fun sendManualNotification(context: Context, photoUrls: List<String>) {
-        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel("photos_channel", "Photos", NotificationManager.IMPORTANCE_HIGH)
-            notificationManager.createNotificationChannel(channel)
-        }
-
-        val storyIntent = Intent(context, StoryActivity::class.java).apply {
-            putStringArrayListExtra("IMAGE_URLS", ArrayList(photoUrls))
-        }
-        val pendingIntent = PendingIntent.getActivity(context, 1, storyIntent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
-
-        val notification = NotificationCompat.Builder(context, "photos_channel")
-            .setContentTitle("Geçmişten Bir Anı (Manuel Kontrol)")
-            .setContentText("Geçmiş yıllarda bugün çekilmiş ${photoUrls.size} fotoğrafınız var.")
-            .setSmallIcon(R.mipmap.ic_launcher)
-            .setContentIntent(pendingIntent)
-            .setAutoCancel(true)
-            .build()
-        notificationManager.notify(2, notification) 
-    }
     
     private fun showSnackbar(message: String, actionText: String? = null, action: (() -> Unit)? = null) {
         val snackbar = Snackbar.make(findViewById(android.R.id.content), message, Snackbar.LENGTH_LONG)
@@ -192,7 +170,7 @@ class MainActivity : AppCompatActivity() {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                  if (alarmManager.canScheduleExactAlarms()) {
                     alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, calendar.timeInMillis, pendingIntent)
-                 } // If permission is not granted, do nothing and let the UI handle the prompt.
+                 } 
             } else {
                  alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, calendar.timeInMillis, pendingIntent)
             }

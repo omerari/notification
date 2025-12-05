@@ -4,26 +4,38 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="16dp"
-    android:gravity="center"
     tools:context=".MainActivity">
+
+    <!-- Invisible anchor view in the exact center -->
+    <View
+        android:id="@+id/center_anchor"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_centerInParent="true" />
 
     <Button
         android:id="@+id/manualCheckButton"
+        style="@style/Widget.AppCompat.Button.Colored"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Şimdi Kontrol Et" />
+        android:layout_above="@id/center_anchor"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="30dp" 
+        android:text="On this Day" />
 
     <TextView
         android:id="@+id/statusTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/manualCheckButton"
+        android:layout_centerHorizontal="true"
         android:layout_marginTop="20dp"
         android:text="Kontrol için butona basın."
         android:textAppearance="?android:attr/textAppearanceMedium" />
 
     <Button
         android:id="@+id/viewLogButton"
+        style="@style/Widget.AppCompat.Button.Borderless"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
