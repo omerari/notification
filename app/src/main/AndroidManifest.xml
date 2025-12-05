@@ -36,7 +36,6 @@
         </activity>
 
         <activity android:name=".SettingsActivity" />
-        <activity android:name=".StoryActivity" android:theme="@style/Theme.AppCompat.NoActionBar"/>
 
         <receiver android:name=".AlarmReceiver" />
 
