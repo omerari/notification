@@ -11,6 +11,7 @@ import androidx.core.app.NotificationCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.util.ArrayList
 
 class AlarmReceiver : BroadcastReceiver() {
 
@@ -21,13 +22,13 @@ class AlarmReceiver : BroadcastReceiver() {
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val photoCount = photoRepository.checkPhotos { logMessage ->
+                val photoUrls = photoRepository.checkPhotos { logMessage ->
                     Logger.log(context, "[PhotoRepository] $logMessage")
                 }
                 
-                if (photoCount > 0) {
-                    Logger.log(context, "$photoCount fotoğraf bulundu, bildirim gönderiliyor.")
-                    sendNotification(context, photoCount)
+                if (!photoUrls.isNullOrEmpty()) {
+                    Logger.log(context, "${photoUrls.size} fotoğraf bulundu, bildirim gönderiliyor.")
+                    sendNotification(context, photoUrls)
                 } else {
                     Logger.log(context, "Fotoğraf bulunamadı veya kurulum eksik, bildirim gönderilmedi.")
                 }
@@ -39,7 +40,7 @@ class AlarmReceiver : BroadcastReceiver() {
         }
     }
 
-    private fun sendNotification(context: Context, photoCount: Int) {
+    private fun sendNotification(context: Context, photoUrls: List<String>) {
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -47,15 +48,20 @@ class AlarmReceiver : BroadcastReceiver() {
             notificationManager.createNotificationChannel(channel)
         }
 
-        val launchIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)
-        val pendingIntent = PendingIntent.getActivity(context, 0, launchIntent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+        // Intent to open StoryActivity
+        val storyIntent = Intent(context, StoryActivity::class.java).apply {
+            putStringArrayListExtra("IMAGE_URLS", ArrayList(photoUrls))
+        }
+
+        val pendingIntent = PendingIntent.getActivity(context, 0, storyIntent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
 
         val notification = NotificationCompat.Builder(context, "photos_channel")
             .setContentTitle("Geçmişten Bir Anı")
-            .setContentText("Geçmiş yıllarda bugün çekilmiş $photoCount fotoğrafınız var.")
+            .setContentText("Geçmiş yıllarda bugün çekilmiş ${photoUrls.size} fotoğrafınız var.")
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentIntent(pendingIntent)
-            .setAutoCancel(true)
+            .setOngoing(true)
+            .setAutoCancel(true) // Will be cancelled when the user clicks it
             .build()
 
         notificationManager.notify(1, notification)

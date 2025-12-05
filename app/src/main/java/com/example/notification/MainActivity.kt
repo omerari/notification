@@ -24,6 +24,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
+import java.util.ArrayList
 import java.util.Calendar
 
 class MainActivity : AppCompatActivity() {
@@ -52,11 +53,12 @@ class MainActivity : AppCompatActivity() {
         manualCheckButton.setOnClickListener {
             statusTextView.text = "Kontrol başlatılıyor..."
             lifecycleScope.launch {
-                val photoCount = photoRepository.checkPhotos { message ->
+                val photoUrls = photoRepository.checkPhotos { message ->
                     runOnUiThread { statusTextView.text = message }
                 }
-                if (photoCount > 0) {
-                    sendManualNotification(this@MainActivity, photoCount)
+                if (!photoUrls.isNullOrEmpty()) {
+                    // Fire a notification instead of starting the activity directly
+                    sendManualNotification(this@MainActivity, photoUrls)
                 }
             }
         }
@@ -118,18 +120,21 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun sendManualNotification(context: Context, photoCount: Int) {
+    private fun sendManualNotification(context: Context, photoUrls: List<String>) {
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel("photos_channel", "Photos", NotificationManager.IMPORTANCE_HIGH)
             notificationManager.createNotificationChannel(channel)
         }
-        val launchIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)
-        val pendingIntent = PendingIntent.getActivity(context, 1, launchIntent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+
+        val storyIntent = Intent(context, StoryActivity::class.java).apply {
+            putStringArrayListExtra("IMAGE_URLS", ArrayList(photoUrls))
+        }
+        val pendingIntent = PendingIntent.getActivity(context, 1, storyIntent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
 
         val notification = NotificationCompat.Builder(context, "photos_channel")
             .setContentTitle("Geçmişten Bir Anı (Manuel Kontrol)")
-            .setContentText("Geçmiş yıllarda bugün çekilmiş $photoCount fotoğrafınız var.")
+            .setContentText("Geçmiş yıllarda bugün çekilmiş ${photoUrls.size} fotoğrafınız var.")
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
