@@ -160,8 +160,8 @@ class PhotoRepository(private val context: Context) {
                 }
                 href?.let {
                     // Exclude the parent directory itself from the list
-                    if (!it.endsWith("/") || it.count { c -> c == '/' } > 5) { // Heuristic to filter out the parent folder itself
-                         resources.add(DavResource(it, lastModified, isCollection))
+                    if (!it.endsWith("/${URLDecoder.decode(parser.getAttributeValue(null, "href"), "UTF-8").split("/").getOrNull(5) ?: ""}/")) {
+                        resources.add(DavResource(it, lastModified, isCollection))
                     }
                 }
             }
