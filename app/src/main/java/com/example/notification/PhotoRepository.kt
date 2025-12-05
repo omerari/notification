@@ -98,6 +98,6 @@ class PhotoRepository(private val context: Context) {
             eventType = parser.next()
         }
         // The first result is always the folder itself, so subtract one if photos are found.
-        return if (photoCount > 0) photoCount -1 else 0
+        return if (photoCount > 0) photoCount - 1 else 0
     }
 }
